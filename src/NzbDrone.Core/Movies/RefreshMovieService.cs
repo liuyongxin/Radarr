@@ -26,7 +26,6 @@ namespace NzbDrone.Core.Movies
         private readonly IAlternativeTitleService _titleService;
         private readonly ICreditService _creditService;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IManageCommandQueue _commandQueueManager;
         private readonly IDiskScanService _diskScanService;
         private readonly ICheckIfMovieShouldBeRefreshed _checkIfMovieShouldBeRefreshed;
         private readonly IConfigService _configService;
@@ -42,7 +41,6 @@ namespace NzbDrone.Core.Movies
                                     IDiskScanService diskScanService,
                                     IRadarrAPIClient apiClient,
                                     ICheckIfMovieShouldBeRefreshed checkIfMovieShouldBeRefreshed,
-                                    IManageCommandQueue commandQueue,
                                     IConfigService configService,
                                     Logger logger)
         {
@@ -52,7 +50,6 @@ namespace NzbDrone.Core.Movies
             _creditService = creditService;
             _eventAggregator = eventAggregator;
             _apiClient = apiClient;
-            _commandQueueManager = commandQueue;
             _diskScanService = diskScanService;
             _checkIfMovieShouldBeRefreshed = checkIfMovieShouldBeRefreshed;
             _configService = configService;
@@ -63,13 +60,13 @@ namespace NzbDrone.Core.Movies
         {
             _logger.ProgressInfo("Updating Info for {0}", movie.Title);
 
-            var tuple = _movieInfo.GetMovieInfo(movie.TmdbId, movie.Profile, movie.HasPreDBEntry);
+            var tuple = _movieInfo.GetMovieInfo(movie.TmdbId, movie.HasPreDBEntry);
 
             var movieInfo = tuple.Item1;
 
             if (movie.TmdbId != movieInfo.TmdbId)
             {
-                _logger.Warn("Movie '{0}' (tvdbid {1}) was replaced with '{2}' (tvdbid {3}), because the original was a duplicate.", movie.Title, movie.TmdbId, movieInfo.Title, movieInfo.TmdbId);
+                _logger.Warn("Movie '{0}' (tmdbid {1}) was replaced with '{2}' (tmdbid {3}), because the original was a duplicate.", movie.Title, movie.TmdbId, movieInfo.Title, movieInfo.TmdbId);
                 movie.TmdbId = movieInfo.TmdbId;
             }
 
