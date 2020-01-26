@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NLog;
+using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Parser;
@@ -8,17 +9,14 @@ using NzbDrone.Core.Validation;
 
 namespace NzbDrone.Core.NetImport.Trakt
 {
-    public class TraktImport : HttpNetImportBase<TraktSettings>
+    public abstract class TraktImportBase<TSettings> : HttpNetImportBase<TSettings>
+    where TSettings : TraktSettingsBase<TSettings>, new()
     {
-        public override string Name => "Trakt List";
-
-        public override NetImportType ListType => NetImportType.Other;
-        public override bool Enabled => true;
-        public override bool EnableAuto => false;
+        public override NetImportType ListType => NetImportType.Trakt;
 
         private INetImportRepository _netImportRepository;
 
-        public TraktImport(INetImportRepository netImportRepository,
+        public TraktImportBase(INetImportRepository netImportRepository,
                            IHttpClient httpClient,
                            IConfigService configService,
                            IParsingService parsingService,
@@ -26,6 +24,36 @@ namespace NzbDrone.Core.NetImport.Trakt
             : base(httpClient, configService, parsingService, logger)
         {
             _netImportRepository = netImportRepository;
+        }
+
+        private string GetUserName(string accessToken)
+        {
+            var request = new HttpRequestBuilder(string.Format("{0}/users/settings", Settings.Link))
+                .Build();
+
+            request.Headers.Add("trakt-api-version", "2");
+            request.Headers.Add("trakt-api-key", Settings.ClientId); //aeon
+
+            if (accessToken.IsNotNullOrWhiteSpace())
+            {
+                request.Headers.Add("Authorization", "Bearer " + accessToken);
+            }
+
+            try
+            {
+                var response = _httpClient.Get<UserSettingsResponse>(request);
+
+                if (response != null && response.Resource != null)
+                {
+                    return response.Resource.user.username;
+                }
+            }
+            catch (HttpException)
+            {
+                _logger.Warn($"Error refreshing trakt access token");
+            }
+
+            return null;
         }
 
         private void RefreshToken()
@@ -61,7 +89,7 @@ namespace NzbDrone.Core.NetImport.Trakt
             }
         }
 
-        public override INetImportRequestGenerator GetRequestGenerator()
+        public override NetImportFetchResult Fetch()
         {
             Settings.Validate().Filter("AccessToken", "RefreshToken").ThrowOnError();
             _logger.Trace($"Access token expires at {Settings.Expires}");
@@ -71,12 +99,13 @@ namespace NzbDrone.Core.NetImport.Trakt
                 RefreshToken();
             }
 
-            return new TraktRequestGenerator() { Settings = Settings, _configService = _configService, HttpClient = _httpClient, };
+            var generator = GetRequestGenerator();
+            return FetchMovies(generator.GetMovies());
         }
 
         public override IParseNetImportResponse GetParser()
         {
-            return new TraktParser(Settings);
+            return new TraktParser();
         }
 
         public override object RequestAction(string action, IDictionary<string, string> query)
@@ -99,6 +128,7 @@ namespace NzbDrone.Core.NetImport.Trakt
                     accessToken = query["access"],
                     expires = DateTime.UtcNow.AddSeconds(4838400),
                     refreshToken = query["refresh"],
+                    authUser = GetUserName(query["access"])
                 };
             }
 

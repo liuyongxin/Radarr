@@ -1,26 +1,15 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.Configuration;
 
-namespace NzbDrone.Core.NetImport.Trakt
+namespace NzbDrone.Core.NetImport.Trakt.Popular
 {
-    public class RefreshRequestResponse
+    public class TraktPopularRequestGenerator : INetImportRequestGenerator
     {
-        public string access_token { get; set; }
-        public string token_type { get; set; }
-        public int expires_in { get; set; }
-        public string refresh_token { get; set; }
-        public string scope { get; set; }
-    }
+        public TraktPopularSettings Settings { get; set; }
 
-    public class TraktRequestGenerator : INetImportRequestGenerator
-    {
-        public IConfigService _configService;
-        public IHttpClient HttpClient { get; set; }
-        public TraktSettings Settings { get; set; }
-
-        public TraktRequestGenerator()
+        public TraktPopularRequestGenerator()
         {
         }
 
@@ -41,38 +30,28 @@ namespace NzbDrone.Core.NetImport.Trakt
 
             switch (Settings.TraktListType)
             {
-                case (int)TraktListType.UserCustomList:
-                    var listName = Parser.Parser.ToUrlSlug(Settings.Listname.Trim());
-                    link = link + $"/users/{Settings.Username.Trim()}/lists/{listName}/items/movies?limit={Settings.Limit}";
-                    break;
-                case (int)TraktListType.UserWatchList:
-                    link = link + $"/users/{Settings.Username.Trim()}/watchlist/movies?limit={Settings.Limit}";
-                    break;
-                case (int)TraktListType.UserWatchedList:
-                    link = link + $"/users/{Settings.Username.Trim()}/watched/movies?limit={Settings.Limit}";
-                    break;
-                case (int)TraktListType.Trending:
+                case (int)TraktPopularListType.Trending:
                     link = link + "/movies/trending" + filtersAndLimit;
                     break;
-                case (int)TraktListType.Popular:
+                case (int)TraktPopularListType.Popular:
                     link = link + "/movies/popular" + filtersAndLimit;
                     break;
-                case (int)TraktListType.Anticipated:
+                case (int)TraktPopularListType.Anticipated:
                     link = link + "/movies/anticipated" + filtersAndLimit;
                     break;
-                case (int)TraktListType.BoxOffice:
+                case (int)TraktPopularListType.BoxOffice:
                     link = link + "/movies/boxoffice" + filtersAndLimit;
                     break;
-                case (int)TraktListType.TopWatchedByWeek:
+                case (int)TraktPopularListType.TopWatchedByWeek:
                     link = link + "/movies/watched/weekly" + filtersAndLimit;
                     break;
-                case (int)TraktListType.TopWatchedByMonth:
+                case (int)TraktPopularListType.TopWatchedByMonth:
                     link = link + "/movies/watched/monthly" + filtersAndLimit;
                     break;
-                case (int)TraktListType.TopWatchedByYear:
+                case (int)TraktPopularListType.TopWatchedByYear:
                     link = link + "/movies/watched/yearly" + filtersAndLimit;
                     break;
-                case (int)TraktListType.TopWatchedByAllTime:
+                case (int)TraktPopularListType.TopWatchedByAllTime:
                     link = link + "/movies/watched/all" + filtersAndLimit;
                     break;
             }

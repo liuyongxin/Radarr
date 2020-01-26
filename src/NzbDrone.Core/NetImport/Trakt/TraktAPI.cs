@@ -1,4 +1,4 @@
-﻿namespace NzbDrone.Core.NetImport.Trakt
+namespace NzbDrone.Core.NetImport.Trakt
 {
     public class Ids
     {
@@ -30,5 +30,24 @@
         public long? collected_count { get; set; }
 
         public Movie movie { get; set; }
+    }
+
+    public class RefreshRequestResponse
+    {
+        public string access_token { get; set; }
+        public string token_type { get; set; }
+        public int expires_in { get; set; }
+        public string refresh_token { get; set; }
+        public string scope { get; set; }
+    }
+
+    public class UserSettingsResponse
+    {
+        public TraktUserResource user { get; set; }
+    }
+
+    public class TraktUserResource
+    {
+        public string username { get; set; }
     }
 }
