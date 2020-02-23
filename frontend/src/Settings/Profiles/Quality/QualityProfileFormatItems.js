@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { sizes } from 'Helpers/Props';
 import FormGroup from 'Components/Form/FormGroup';
 import FormLabel from 'Components/Form/FormLabel';
 import FormInputHelpText from 'Components/Form/FormInputHelpText';
-import QualityProfileFormatItemDragSource from './QualityProfileFormatItemDragSource';
-import QualityProfileFormatItemDragPreview from './QualityProfileFormatItemDragPreview';
+import Link from 'Components/Link/Link';
+import QualityProfileFormatItem from './QualityProfileFormatItem';
 import styles from './QualityProfileFormatItems.css';
 
 class QualityProfileFormatItems extends Component {
@@ -14,24 +15,30 @@ class QualityProfileFormatItems extends Component {
 
   render() {
     const {
-      dragIndex,
-      dropIndex,
       profileFormatItems,
       errors,
       warnings,
       ...otherProps
     } = this.props;
 
-    const isDragging = dropIndex !== null;
-    const isDraggingUp = isDragging && dropIndex > dragIndex;
-    const isDraggingDown = isDragging && dropIndex < dragIndex;
+    if (profileFormatItems.length < 1) {
+      return (
+        <div className={styles.addCustomFormatMessage}>
+          Want more control over which downloads are preferred? Add a
+          <Link to='/settings/customformats'> Custom Format </Link>
+        </div>
+      );
+    }
 
     return (
-      <FormGroup>
-        <FormLabel>Custom Formats</FormLabel>
+      <FormGroup size={sizes.EXTRA_SMALL}>
+        <FormLabel size={sizes.SMALL}>
+          Custom Formats
+        </FormLabel>
+
         <div>
           <FormInputHelpText
-            text="Custom Formats higher in the list are more preferred. Only checked custom formats are wanted"
+            text="Matching Custom Formats are scored and files upgraded if a new download would improve the score"
           />
 
           {
@@ -61,25 +68,29 @@ class QualityProfileFormatItems extends Component {
           }
 
           <div className={styles.formats}>
+            <div className={styles.headerContainer}>
+              <div className={styles.headerTitle}>
+                Custom Format
+              </div>
+              <div className={styles.headerScore}>
+                Score
+              </div>
+            </div>
             {
-              profileFormatItems.map(({ allowed, format, name }, index) => {
-                return (
-                  <QualityProfileFormatItemDragSource
-                    key={format}
-                    formatId={format}
-                    name={name}
-                    allowed={allowed}
-                    sortIndex={index}
-                    isDragging={isDragging}
-                    isDraggingUp={isDraggingUp}
-                    isDraggingDown={isDraggingDown}
-                    {...otherProps}
-                  />
-                );
-              }).reverse()
+              profileFormatItems.sort((a, b) => ((a.score < b.score) ? 1 : -1))
+                .map(({ format, name, score }, index) => {
+                  return (
+                    <QualityProfileFormatItem
+                      key={format}
+                      formatId={format}
+                      name={name}
+                      score={score}
+                      sortIndex={index}
+                      {...otherProps}
+                    />
+                  );
+                })
             }
-
-            <QualityProfileFormatItemDragPreview />
           </div>
         </div>
       </FormGroup>
@@ -88,8 +99,6 @@ class QualityProfileFormatItems extends Component {
 }
 
 QualityProfileFormatItems.propTypes = {
-  dragIndex: PropTypes.number,
-  dropIndex: PropTypes.number,
   profileFormatItems: PropTypes.arrayOf(PropTypes.object).isRequired,
   errors: PropTypes.arrayOf(PropTypes.object),
   warnings: PropTypes.arrayOf(PropTypes.object)
