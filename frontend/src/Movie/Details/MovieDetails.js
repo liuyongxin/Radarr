@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import TextTruncate from 'react-text-truncate';
 import formatBytes from 'Utilities/Number/formatBytes';
 import selectAll from 'Utilities/Table/selectAll';
@@ -37,9 +38,9 @@ import MovieAlternateTitles from './MovieAlternateTitles';
 import MovieDetailsLinks from './MovieDetailsLinks';
 import InteractiveSearchTable from 'InteractiveSearch/InteractiveSearchTable';
 import InteractiveSearchFilterMenuConnector from 'InteractiveSearch/InteractiveSearchFilterMenuConnector';
+import TranslatedMovieTitleConnector from '../TranslatedMovieTitleConnector';
 // import MovieTagsConnector from './MovieTagsConnector';
 import styles from './MovieDetails.css';
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 const defaultFontSize = parseInt(fonts.defaultFontSize);
 const lineHeight = parseFloat(fonts.lineHeight);
@@ -285,7 +286,9 @@ class MovieDetails extends Component {
                     </div>
 
                     <div className={styles.title}>
-                      {title}
+                      <TranslatedMovieTitleConnector
+                        movieId={id}
+                      />
                     </div>
 
                     {
